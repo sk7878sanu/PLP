@@ -1,0 +1,387 @@
+USE Training_13Aug19_Pune
+GO
+
+--Creating a Schema for the Project
+
+CREATE SCHEMA HBMS
+GO
+
+--Creating Table for Storing User Details
+
+CREATE TABLE HBMS.Users
+(
+UserID INT IDENTITY(1000,1) PRIMARY KEY,
+UserName VARCHAR(40) UNIQUE NOT NULL,
+Email VARCHAR(40) UNIQUE NOT NULL,
+PhoneNo VARCHAR(10) UNIQUE NOT NULL,
+Name VARCHAR(50) NOT NULL,
+PasswordHash VARBINARY(max) NOT NULL,
+UserType VARCHAR(15) NOT NULL CHECK (UserType in ('Customer','Employee','Admin'))
+)
+
+--Procedure to Check If Any User Credential Already Exists
+
+CREATE PROCEDURE HBMS.UserAlreadyExist
+@username VARCHAR(40),
+@email VARCHAR(40),
+@phoneno VARCHAR(10)
+AS
+DECLARE @ret INT
+    BEGIN
+        SET @ret=0
+        IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE UserName=@username)>0
+            BEGIN
+                SET @ret=@ret+1
+            END
+        IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE Email=@email)>0
+            BEGIN
+                SET @ret=@ret+10
+            END
+        IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE PhoneNo=@phoneno)>0
+            BEGIN
+                SET @ret=@ret+100
+            END
+        SELECT @ret
+    END
+GO
+
+--Procedure for Registering the User
+
+CREATE PROCEDURE HBMS.RegisterUser
+@username VARCHAR(40),
+@email VARCHAR(40),
+@phoneno VARCHAR(10),
+@name VARCHAR(20),
+@password VARCHAR(20),
+@usertype VARCHAR(15)
+AS
+    BEGIN
+        INSERT INTO HBMS.Users VALUES(@username,@email,@phoneno,@name,EncryptByPassPhrase('2b|!2biet?',@password),@usertype)
+    END
+GO
+
+--Procedure for Verifying Login Credentials
+
+CREATE PROCEDURE HBMS.VerifyLogin
+@loginid VARCHAR(40),
+@password VARCHAR(20)
+AS
+    BEGIN
+        SELECT * FROM HBMS.Users WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password) OR (Email=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password) OR (PhoneNo=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+    END
+GO
+
+
+--For Changing Password
+CREATE PROCEDURE HBMS.ChangePassword
+@loginid VARCHAR(40),
+@password VARCHAR(20),
+@passwordnew VARCHAR(20)
+AS
+    BEGIN
+        UPDATE HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+    END
+GO
+-------------------------------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+--Creating Table for Storing Hotel Details
+
+CREATE TABLE HBMS.Hotels
+(
+HotelID INT IDENTITY(1000,1) PRIMARY KEY,
+HotelName VARCHAR(40) UNIQUE NOT NULL,
+Location VARCHAR(30) NOT NULL,
+HotelType VARCHAR(3) NOT NULL CHECK (HotelType IN ('***','****','*****')),
+Rating INT NOT NULL CHECK (Rating IN (1,2,3,4,5)),
+WiFi VARCHAR (5) NOT NULL CHECK (WiFi IN ('Yes','No')),
+Geyser VARCHAR (5) NOT NULL CHECK (Geyser IN ('Yes','No')),
+StartingAt INT NOT NULL,
+Discount FLOAT
+)
+
+--Procedure for Adding a new Hotel
+
+CREATE PROCEDURE HBMS.AddHotel
+@hotelname VARCHAR(40),
+@location VARCHAR(30),
+@hoteltype VARCHAR(3),
+@rating INT,
+@wifi VARCHAR (5),
+@geyser VARCHAR (5),
+@startingat INT,
+@discount FLOAT
+AS
+    BEGIN
+        INSERT INTO HBMS.Hotels VALUES (@hotelname,@location,@hoteltype,@rating,@wifi,@geyser,@startingAt,@discount)
+    END
+GO
+
+--Procedure for Showing details of All Hotels 
+
+CREATE PROCEDURE HBMS.ShowHotels
+AS
+	BEGIN
+		SELECT * FROM HBMS.Hotels
+	END
+GO
+
+--Procedure for Deleting a Hotel by HotelID
+
+CREATE PROCEDURE HBMS.DeleteHotelByID
+@hotelid INT
+AS
+	BEGIN
+		DELETE FROM HBMS.Hotels WHERE HotelID = @hotelid
+	END
+GO
+
+--Procedure for Deleting a Hotel by HotelName
+
+CREATE PROCEDURE HBMS.DeleteHotelByName
+@hotelname VARCHAR(40)
+AS
+	BEGIN
+		DELETE FROM HBMS.Hotels WHERE HotelName = @hotelname
+	END
+GO
+
+
+--Procedure for Modifying a Hotel by HotelID
+
+CREATE PROCEDURE HBMS.ModifyHotelByID
+@hotelid INT,
+@hotelname VARCHAR(40),
+@location VARCHAR(30),
+@hoteltype VARCHAR(3),
+@rating INT,
+@wifi VARCHAR (5),
+@geyser VARCHAR (5),
+@startingat INT,
+@discount FLOAT
+AS
+    BEGIN
+        UPDATE HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
+    END
+GO
+
+--Procedure for Modifying a Hotel by HotelName
+
+CREATE PROCEDURE HBMS.ModifyHotelByName
+@hotelname VARCHAR(40),
+@location VARCHAR(30),
+@hoteltype VARCHAR(3),
+@rating INT,
+@wifi VARCHAR (5),
+@geyser VARCHAR (5),
+@startingat INT,
+@discount FLOAT
+AS
+    BEGIN
+        UPDATE HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
+    END
+GO
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--Creating Table for Storing Room Details
+
+CREATE TABLE HBMS.RoomDetails
+(
+RoomID INT IDENTITY(1000,1) PRIMARY KEY,
+RoomNo INT UNIQUE NOT NULL,
+HotelID INT NOT NULL FOREIGN KEY (HotelID) REFERENCES HBMS.Hotels(HotelID) ON DELETE CASCADE,
+Price FLOAT NOT NULL,
+Beds VARCHAR(10) NOT NULL CHECK(Beds IN ('Single(1X)','Classic(2X)','Suite(3X)')),
+RoomType VARCHAR(10) NOT NULL CHECK (RoomType IN ('Deluxe','Standard'))
+--BookingID INT NOT NULL FOREIGN KEY (BookingID) REFERENCES HBMS.BookingDetails(BookingID)
+)
+
+--Procedure for Adding a new Room
+
+CREATE PROCEDURE HBMS.AddRooms
+@roomno INT,
+@hotelid INT,
+@price FLOAT,
+@beds VARCHAR(10),
+@roomtype VARCHAR(10)
+AS
+    BEGIN
+        INSERT INTO HBMS.RoomDetails VALUES (@roomno,@hotelid,@price,@beds,@roomtype)
+    END
+GO
+
+--Procedure for Showing details of All Rooms 
+
+CREATE PROCEDURE HBMS.ShowRooms
+AS
+	BEGIN
+		SELECT * FROM HBMS.RoomDetails
+	END
+GO
+
+--Procedure for Deleting a Room by RoomID
+
+CREATE PROCEDURE HBMS.DeleteRoomByID
+@roomid INT
+AS
+	BEGIN
+		DELETE FROM HBMS.RoomDetails WHERE RoomID = @roomid
+	END
+GO
+
+--Procedure for Modifying a Room by RoomID
+
+CREATE PROCEDURE HBMS.ModifyRoomByID
+@roomid INT,
+@roomno INT,
+@hotelid INT,
+@price FLOAT,
+@beds VARCHAR(10),
+@roomtype VARCHAR(10),
+AS
+    BEGIN
+        UPDATE HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
+    END
+GO
+
+--Procedure for Searching a Room by RoomID
+
+CREATE PROCEDURE HBMS.SearchRoomByID
+@roomid INT
+AS
+	BEGIN
+		SELECT * FROM HBMS.RoomDetails WHERE RoomID=@roomid
+	END
+GO
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--Creating Table for Storing Booking Details
+
+CREATE TABLE HBMS.BookingDetails
+(
+BookingID INT IDENTITY(1000,1) PRIMARY KEY,
+UserID INT NOT NULL FOREIGN KEY (UserID) REFERENCES HBMS.Users(UserID) ON DELETE CASCADE,
+GuestName VARCHAR(40) NOT NULL,
+RoomID INT NOT NULL FOREIGN KEY (RoomID) REFERENCES HBMS.RoomDetails(RoomID) ON DELETE CASCADE,
+BookingFrom DATE NOT NULL,
+BookingTo DATE NOT NULL,
+GuestNum INT NOT NULL CHECK (GuestNum IN (1,2,3)),
+BreakfastIncluded VARCHAR (5) NOT NULL CHECK (BreakfastIncluded IN ('Yes','No')),
+TotalAmount FLOAT NOT NULL,
+BookingStatus VARCHAR(10) NOT NULL CHECK(BookingStatus IN ('Confirmed','Cancelled'))
+)
+
+--Procedure for Booking a new Room
+
+CREATE PROCEDURE HBMS.BookRooms
+@userid INT,
+@guestname VARCHAR(40),
+@roomtype VARCHAR(10),
+@hotelid INT,
+@bookingfrom DATE,
+@bookingto DATE,
+@location VARCHAR(30),
+@beds VARCHAR(10),
+@guestnum INT,
+@breakfastincluded VARCHAR (5),
+@totalamount FLOAT
+AS
+	BEGIN
+		DECLARE @roomid VARCHAR(10)
+		SET @roomid=(SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomType=@roomtype AND Beds=@beds AND HotelID=@hotelid)
+        INSERT INTO HBMS.BookingDetails VALUES (@userid,@guestname,@roomid,@bookingfrom,@bookingto,@guestnum,@breakfastincluded,@totalamount,'Confirmed')
+    END
+GO
+
+--Procedure to check if Rooms are available
+
+CREATE PROCEDURE HBMS.AvailableRooms
+@hotelid INT,
+@bookingfrom DATE,
+@bookingto DATE
+AS
+	BEGIN
+		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND HotelID=@hotelid
+    END
+GO
+
+--Procedure to Cancel Rooms
+
+CREATE PROCEDURE HBMS.CancelRooms
+@bookingid INT
+AS
+	BEGIN
+		UPDATE HBMS.BookingDetails SET BookingStatus='Cancelled' WHERE BookingID=@bookingid
+    END
+GO
+
+--Procedure to Change number of guests
+
+CREATE PROCEDURE HBMS.ChangeGuestNumber
+@bookingid INT,
+@guestnum INT
+AS
+	BEGIN
+		UPDATE HBMS.BookingDetails SET GuestNum=@guestnum WHERE @BookingID=@bookingid
+    END
+GO
+
+--Procedure to Change Room
+
+CREATE PROCEDURE HBMS.ChangeRoom
+@bookingid INT,
+@roomtype VARCHAR(10),
+@beds VARCHAR(10),
+@bookingfrom DATE,
+@bookingto DATE
+AS
+	BEGIN
+		DECLARE @room1 INT
+		SET @room1 = (SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomType=@roomtype AND Beds=@beds AND HotelID=@hotelid)
+		UPDATE HBMS.BookingDetails SET RoomID=@room1 WHERE BookingID=@bookingid
+    END
+GO
+
+--Procedure for Searching a Room by RoomType
+
+CREATE PROCEDURE HBMS.SearchRoomByType
+@roomtype VARCHAR(10),
+@bookingfrom DATE,
+@bookingto DATE
+AS
+	BEGIN
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))
+	END
+GO
+
+--Procedure for Searching a Room by Beds
+
+CREATE PROCEDURE HBMS.SearchRoomByBeds
+@beds VARCHAR(10),
+@bookingfrom DATE,
+@bookingto DATE
+AS
+	BEGIN
+		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))
+	END
+GO
+
+--Procedure for Searching a Room by RoomType and Beds
+
+CREATE PROCEDURE HBMS.SearchRoomByTypeAndBeds
+@roomtype VARCHAR(10),
+@beds VARCHAR(10),
+@bookingfrom DATE,
+@bookingto DATE
+AS
+	BEGIN
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) 
+	END
+GO
+
+
