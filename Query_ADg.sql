@@ -312,7 +312,7 @@ CREATE PROCEDURE HBMS.BookRooms
 AS
 	BEGIN
 		DECLARE @roomid VARCHAR(10)
-		SET @roomid=(SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomType=@roomtype AND Beds=@beds AND HotelID=@hotelid)
+		SET @roomid=(SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto) AND BookingStatus='Confirmed') AND RoomType=@roomtype AND Beds=@beds AND HotelID=@hotelid)
         INSERT INTO HBMS.BookingDetails VALUES (@userid,@guestname,@roomid,@bookingfrom,@bookingto,@guestnum,@breakfastincluded,@totalamount,'Confirmed')
     END
 GO
@@ -349,7 +349,7 @@ AS
 GO
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
---Procedure to Cancel Rooms
+--Procedure to Cancel Booking
 
 CREATE PROCEDURE HBMS.CancelBooking
 @bookingid INT
@@ -381,7 +381,7 @@ CREATE PROCEDURE HBMS.ChangeRoom
 AS
 	BEGIN
 		DECLARE @room1 INT
-		SET @room1 = (SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomType=@roomtype AND Beds=@beds)
+		SET @room1 = (SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomType=@roomtype AND Beds=@beds)
 		UPDATE HBMS.BookingDetails SET RoomID=@room1 WHERE BookingID=@bookingid
     END
 GO
@@ -395,7 +395,7 @@ CREATE PROCEDURE HBMS.SearchRoomByType
 @bookingto DATE
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -408,7 +408,7 @@ CREATE PROCEDURE HBMS.SearchRoomByBeds
 @bookingto DATE
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -422,7 +422,7 @@ CREATE PROCEDURE HBMS.SearchRoomByTypeAndBeds
 @bookingto DATE
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -434,7 +434,7 @@ CREATE PROCEDURE HBMS.SearchRoomByLocationAndDates
 @bookingto DATE
 AS
 	BEGIN
-		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
     END
 GO
 
