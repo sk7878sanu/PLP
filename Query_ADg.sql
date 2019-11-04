@@ -92,8 +92,8 @@ CREATE TABLE HBMS.Hotels
 HotelID INT IDENTITY(1000,1) PRIMARY KEY,
 HotelName VARCHAR(40) UNIQUE NOT NULL,
 Location VARCHAR(30) NOT NULL,
-HotelType VARCHAR(3) NOT NULL CHECK (HotelType IN ('***','****','*****')),
-Rating INT NOT NULL CHECK (Rating IN (1,2,3,4,5)),
+HotelType VARCHAR(10) NOT NULL CHECK (HotelType IN ('*','**','***','****','*****')),
+Rating FLOAT NOT NULL CHECK (Rating > 1 AND Rating < 5),
 WiFi VARCHAR (5) NOT NULL CHECK (WiFi IN ('Yes','No')),
 Geyser VARCHAR (5) NOT NULL CHECK (Geyser IN ('Yes','No')),
 StartingAt INT NOT NULL,
@@ -105,7 +105,7 @@ Discount FLOAT
 CREATE PROCEDURE HBMS.AddHotel
 @hotelname VARCHAR(40),
 @location VARCHAR(30),
-@hoteltype VARCHAR(3),
+@hoteltype VARCHAR(10),
 @rating INT,
 @wifi VARCHAR (5),
 @geyser VARCHAR (5),
@@ -125,6 +125,8 @@ AS
 		SELECT * FROM HBMS.Hotels
 	END
 GO
+
+UPDATE HBMS.Hotels SET HotelType='*****' WHERE HotelID=1000
 
 --Procedure for Deleting a Hotel by HotelID
 
@@ -153,8 +155,8 @@ CREATE PROCEDURE HBMS.ModifyHotelByID
 @hotelid INT,
 @hotelname VARCHAR(40),
 @location VARCHAR(30),
-@hoteltype VARCHAR(3),
-@rating INT,
+@hoteltype VARCHAR(10),
+@rating FLOAT,
 @wifi VARCHAR (5),
 @geyser VARCHAR (5),
 @startingat INT,
@@ -170,7 +172,7 @@ GO
 CREATE PROCEDURE HBMS.ModifyHotelByName
 @hotelname VARCHAR(40),
 @location VARCHAR(30),
-@hoteltype VARCHAR(3),
+@hoteltype VARCHAR(10),
 @rating INT,
 @wifi VARCHAR (5),
 @geyser VARCHAR (5),
