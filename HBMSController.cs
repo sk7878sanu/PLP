@@ -696,25 +696,24 @@ namespace HBMS_API.Controllers
         //CRUD operations for Booking Details
 
         [HttpPost]
-        public bool PostBookingDetails(BookingDetail booking) //Book a new Room
+        public bool PostBookRooms(BookingDetail booking,string roomtype,int hotelid,string beds) //Book a new Room
         {
             bool bookingAdded = false;
 
             try
             {
-                cmd = new SqlCommand("HBMS.AddHotel", conn);
+                cmd = new SqlCommand("HBMS.BookRooms", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@userid", booking.UserID);
                 cmd.Parameters.AddWithValue("@guestname", booking.GuestName);
-                cmd.Parameters.AddWithValue("@roomtype", booking.Roo);
-                cmd.Parameters.AddWithValue("@hotelid", hotel.Rating);
-                cmd.Parameters.AddWithValue("@bookingfrom", hotel.WiFi);
-                cmd.Parameters.AddWithValue("@bookingto", hotel.Geyser);
-                cmd.Parameters.AddWithValue("@location", hotel.StartingAt);
-                cmd.Parameters.AddWithValue("@beds", hotel.Discount);
-                cmd.Parameters.AddWithValue("@guestnum", hotel.Discount);
-                cmd.Parameters.AddWithValue("@breakfastincluded", hotel.Discount);
-                cmd.Parameters.AddWithValue("@totalamount", hotel.Discount);
+                cmd.Parameters.AddWithValue("@roomtype", roomtype);
+                cmd.Parameters.AddWithValue("@hotelid", hotelid);
+                cmd.Parameters.AddWithValue("@bookingfrom", booking.BookingFrom);
+                cmd.Parameters.AddWithValue("@bookingto", booking.BookingTo);
+                cmd.Parameters.AddWithValue("@beds", beds);
+                cmd.Parameters.AddWithValue("@guestnum", booking.GuestNum);
+                cmd.Parameters.AddWithValue("@breakfastincluded",booking.BreakfastIncluded);
+                cmd.Parameters.AddWithValue("@totalamount",booking.TotalAmount);
 
                 conn.Open();
                 int result = cmd.ExecuteNonQuery();
@@ -734,6 +733,52 @@ namespace HBMS_API.Controllers
             return bookingAdded;
         }
 
+        [HttpGet]
+        public List<BookingDetail> GetAllBookings() //list all Booking Details
+        {
+            List<BookingDetail> bookingList = new List<BookingDetail>();
+
+            try
+            {
+                cmd = new SqlCommand("HBMS.ShowBookings", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                conn.Open();
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable bookingTable = new DataTable();
+
+                bookingTable.Load(reader);
+
+                for (int i = 0; i < bookingTable.Rows.Count; i++)
+                {
+                    BookingDetail booking = new BookingDetail();
+
+                    booking.BookingID = (int)bookingTable.Rows[i][0];
+                    booking.UserID = (int)bookingTable.Rows[i][1];
+                    booking.GuestName = (string)bookingTable.Rows[i][2];
+                    booking.RoomID = (int)bookingTable.Rows[i][3];
+                    booking.BookingFrom = (DateTime)bookingTable.Rows[i][4];
+                    booking.BookingTo = (DateTime)bookingTable.Rows[i][5];
+                    booking.GuestNum = (int)bookingTable.Rows[i][6];
+                    booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
+                    booking.TotalAmount = (double)bookingTable.Rows[i][8];
+                    booking.BookingStatus = (string)bookingTable.Rows[i][9];
+
+                    bookingList.Add(booking);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return bookingList;
+        }
 
 
     }
