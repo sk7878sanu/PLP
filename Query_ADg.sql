@@ -79,7 +79,7 @@ CREATE PROCEDURE HBMS.ChangePassword
 @passwordnew VARCHAR(20)
 AS
 	BEGIN
-		DATETIME HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+		UPDATE HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
 	END
 GO
 
@@ -91,7 +91,7 @@ CREATE PROCEDURE HBMS.ChangeDetails
 @name VARCHAR(50)
 AS
 	BEGIN
-		DATETIME HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
+		UPDATE HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
 	END
 GO
 
@@ -107,22 +107,8 @@ SELECT * FROM HBMS.Users
 
 EXEC HBMS.ChangePassword @loginid='satish08', @password='123', @passwordnew='123456'
 
-
-
-CREATE PROCEDURE HBMS.RateHotels
-
-
-
-
-
-
-
-
-
-
-
-
-
+---------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------
 
 --Creating Table for Storing Hotel Details
 
@@ -132,7 +118,7 @@ HotelID INT IDENTITY(1000,1) PRIMARY KEY,
 HotelName VARCHAR(40) UNIQUE NOT NULL,
 Location VARCHAR(30) NOT NULL,
 HotelType VARCHAR(10) NOT NULL CHECK (HotelType IN ('*','**','***','****','*****')),
-Rating FLOAT NOT NULL CHECK (Rating >= 1 AND Rating <= 5),
+Rating FLOAT CHECK (Rating >= 1 AND Rating <= 5),
 WiFi VARCHAR (5) NOT NULL CHECK (WiFi IN ('Yes','No')),
 Geyser VARCHAR (5) NOT NULL CHECK (Geyser IN ('Yes','No')),
 StartingAt FLOAT NOT NULL,
@@ -220,7 +206,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByID
 @discount FLOAT
 AS
     BEGIN
-        DATETIME HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
+        UPDATE HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
     END
 GO
 
@@ -237,7 +223,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByName
 @discount FLOAT
 AS
     BEGIN
-        DATETIME HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
+        UPDATE HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
     END
 GO
 
@@ -301,7 +287,7 @@ CREATE PROCEDURE HBMS.ModifyRoomByID
 @roomtype VARCHAR(10)
 AS
     BEGIN
-        DATETIME HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
+        UPDATE HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
     END
 GO
 
@@ -332,7 +318,8 @@ BookingTo DATETIME NOT NULL,
 GuestNum INT NOT NULL CHECK (GuestNum IN (1,2,3)),
 BreakfastIncluded VARCHAR (5) NOT NULL CHECK (BreakfastIncluded IN ('Yes','No')),
 TotalAmount FLOAT NOT NULL,
-BookingStatus VARCHAR(10) NOT NULL CHECK(BookingStatus IN ('Confirmed','Cancelled'))
+BookingStatus VARCHAR(10) NOT NULL CHECK(BookingStatus IN ('Confirmed','Cancelled')),
+Rating FLOAT CHECK (Rating >= 1 AND Rating <= 5)
 )
 
 --Procedure for Booking a new Room
@@ -347,12 +334,13 @@ CREATE PROCEDURE HBMS.BookRooms
 @beds VARCHAR(10),
 @guestnum INT,
 @breakfastincluded VARCHAR (5),
-@totalamount FLOAT
+@totalamount FLOAT,
+@rating FLOAT
 AS
 	BEGIN
-		DECLARE @roomid VARCHAR(10)
+		DECLARE @roomid INT
 		SET @roomid=(SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto) AND BookingStatus='Confirmed') AND RoomType=@roomtype AND Beds=@beds AND HotelID=@hotelid)
-        INSERT INTO HBMS.BookingDetails VALUES (@userid,@guestname,@roomid,@bookingfrom,@bookingto,@guestnum,@breakfastincluded,@totalamount,'Confirmed')
+        INSERT INTO HBMS.BookingDetails VALUES (@userid,@guestname,@roomid,@bookingfrom,@bookingto,@guestnum,@breakfastincluded,@totalamount,'Confirmed',@rating)
     END
 GO
 
@@ -420,7 +408,7 @@ CREATE PROCEDURE HBMS.ViewAvailableRooms
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -435,6 +423,8 @@ AS
 GO
 
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Rating
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 --Procedure for Searching a Room by RoomType
 
@@ -445,7 +435,7 @@ CREATE PROCEDURE HBMS.SearchRoomByType
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -458,7 +448,7 @@ CREATE PROCEDURE HBMS.SearchRoomByBeds
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -472,7 +462,7 @@ CREATE PROCEDURE HBMS.SearchRoomByTypeAndBeds
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -484,12 +474,12 @@ CREATE PROCEDURE HBMS.SearchRoomByLocationAndDates
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
     END
 GO
 
 CREATE PROCEDURE HBMS.RateHotels
-@userrating INT,
+@userrating FLOAT,
 @bookingid INT,
 @hotelid INT
 AS
@@ -500,3 +490,20 @@ AS
 		UPDATE HBMS.Hotels SET Rating=@avg WHERE HotelID=@hotelid
 	END
 GO
+
+
+EXEC HBMS.RateHotels @userrating=5,@bookingid=1000,@hotelid=1000
+
+SELECT * FROM HBMS.Users
+
+SELECT * FROM HBMS.Hotels
+
+INSERT INTO HBMS.Hotels VALUES ('Sonar Bangla','Kolkata','*****',4.5,'Yes','Yes',40000,0.2)
+
+SELECT * FROM HBMS.RoomDetails
+
+INSERT INTO HBMS.RoomDetails VALUES ('101',1000,50000,'Single(1X)','Deluxe')
+
+SELECT * FROM HBMS.BookingDetails
+
+INSERT INTO HBMS.BookingDetails VALUES (1000,'Soumyadip',1000,'11/04/2019','12/04/2019',2,'Yes',50000,'Confirmed',null)
