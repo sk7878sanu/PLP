@@ -478,22 +478,9 @@ AS
     END
 GO
 
+
 CREATE PROCEDURE HBMS.RateHotels
 @userrating FLOAT,
-@bookingid INT,
-@hotelid INT
-AS
-	BEGIN
-		Declare @avg FLOAT
-		SET @avg=((SELECT Count(BookingID) FROM HBMS.BookingDetails WHERE Rating IS NOT NULL)*(SELECT Rating FROM HBMS.Hotels WHERE HotelID=@hotelID)+@userrating)/((SELECT Count(BookingID) FROM HBMS.BookingDetails WHERE Rating IS NOT NULL)+1)
-		UPDATE HBMS.BookingDetails SET Rating=@userrating WHERE BookingID=@bookingid
-		UPDATE HBMS.Hotels SET Rating=@avg WHERE HotelID=@hotelid
-	END
-GO
-
-
-CREATE PROCEDURE HBMS.RateHotels
-@userrating INT,
 @bookingid INT,
 @hotelid INT
 AS
