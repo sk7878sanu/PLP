@@ -79,7 +79,7 @@ CREATE PROCEDURE HBMS.ChangePassword
 @passwordnew VARCHAR(20)
 AS
 	BEGIN
-		UPDATETIME HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+		DATETIME HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
 	END
 GO
 
@@ -91,7 +91,7 @@ CREATE PROCEDURE HBMS.ChangeDetails
 @name VARCHAR(50)
 AS
 	BEGIN
-		UPDATETIME HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
+		DATETIME HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
 	END
 GO
 
@@ -220,7 +220,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByID
 @discount FLOAT
 AS
     BEGIN
-        UPDATETIME HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
+        DATETIME HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
     END
 GO
 
@@ -237,7 +237,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByName
 @discount FLOAT
 AS
     BEGIN
-        UPDATETIME HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
+        DATETIME HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
     END
 GO
 
@@ -301,7 +301,7 @@ CREATE PROCEDURE HBMS.ModifyRoomByID
 @roomtype VARCHAR(10)
 AS
     BEGIN
-        UPDATETIME HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
+        DATETIME HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
     END
 GO
 
