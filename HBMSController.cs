@@ -74,5 +74,101 @@ namespace HBMS_WebAPI.Controllers
             }
             return registered;
         }
+
+        //login
+        [HttpGet]
+        public UserAccount Login(string loginid, string password)
+        {
+            UserAccount loggedin = new UserAccount();
+            try
+            {
+                cmd = new SqlCommand("HBMS.VerifyLogin", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@loginid", loginid);
+                cmd.Parameters.AddWithValue("@password", password);
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read())
+                    return null;
+                loggedin.UserID = (int)reader[0];
+                loggedin.UserName = (string)reader[1];
+                loggedin.Email = (string)reader[2];
+                loggedin.PhoneNo = (string)reader[3];
+                loggedin.Name = (string)reader[4];
+                loggedin.Password = "";
+                loggedin.UserType = (string)reader[6];
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            if (loggedin.UserName == null)
+                return null;
+            return loggedin;
+        }
+
+        [HttpPut]
+        public bool ChangePassword(string loginid,string password,string passwordnew)
+        {
+            bool changed = false;
+            try
+            {
+                cmd = new SqlCommand("HBMS.ChangePassword", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@loginid", loginid);
+                cmd.Parameters.AddWithValue("@password", password);
+                cmd.Parameters.AddWithValue("@passwordnew", passwordnew);
+                conn.Open();
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    changed = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return changed;
+        }
+
+        [HttpPut]
+        public bool ChangeDetails(string username, string email, string phoneno, string name)
+        {
+            bool changed = false;
+            try
+            {
+                cmd = new SqlCommand("HBMS.ChangePassword", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@username", username);
+                cmd.Parameters.AddWithValue("@email", email);
+                cmd.Parameters.AddWithValue("@phoneno", phoneno);
+                cmd.Parameters.AddWithValue("@name", name);
+                conn.Open();
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    changed = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return changed;
+        }
+
     }
 }
