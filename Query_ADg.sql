@@ -487,3 +487,16 @@ AS
 		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
     END
 GO
+
+CREATE PROCEDURE HBMS.RateHotels
+@userrating INT,
+@bookingid INT,
+@hotelid INT
+AS
+	BEGIN
+		Declare @avg FLOAT
+		SET @avg=((SELECT Count(BookingID) FROM HBMS.BookingDetails WHERE Rating IS NOT NULL)*(SELECT Rating FROM HBMS.Hotels WHERE HotelID=@hotelID)+@userrating)/((SELECT Count(BookingID) FROM HBMS.BookingDetails WHERE Rating IS NOT NULL)+1)
+		UPDATE HBMS.BookingDetails SET Rating=@userrating WHERE BookingID=@bookingid
+		UPDATE HBMS.Hotels SET Rating=@avg WHERE HotelID=@hotelid
+	END
+GO
