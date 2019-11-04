@@ -305,7 +305,6 @@ CREATE PROCEDURE HBMS.BookRooms
 @hotelid INT,
 @bookingfrom DATE,
 @bookingto DATE,
-@location VARCHAR(30),
 @beds VARCHAR(10),
 @guestnum INT,
 @breakfastincluded VARCHAR (5),
