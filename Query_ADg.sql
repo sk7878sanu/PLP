@@ -318,6 +318,36 @@ AS
     END
 GO
 
+--Procedure to List all Booking Details
+
+CREATE PROCEDURE HBMS.ShowBookings
+AS
+	BEGIN
+		SELECT * FROM HBMS.BookingDetails
+    END
+GO
+
+--Procedure to Search a Booking by ID
+
+CREATE PROCEDURE HBMS.SearchBookingByID
+@bookingid INT
+AS
+	BEGIN
+		SELECT * FROM HBMS.BookingDetails WHERE BookingID=@bookingid
+    END
+GO
+
+--Procedure to Delete a Booking by BookingID
+
+
+CREATE PROCEDURE HBMS.DeleteBookingByID
+@bookingid INT
+AS
+	BEGIN
+		DELETE FROM HBMS.BookingDetails WHERE BookingID=@bookingid
+    END
+GO
+
 --Procedure to Cancel Rooms
 
 CREATE PROCEDURE HBMS.CancelRooms
