@@ -96,7 +96,7 @@ HotelType VARCHAR(10) NOT NULL CHECK (HotelType IN ('*','**','***','****','*****
 Rating FLOAT NOT NULL CHECK (Rating > 1 AND Rating < 5),
 WiFi VARCHAR (5) NOT NULL CHECK (WiFi IN ('Yes','No')),
 Geyser VARCHAR (5) NOT NULL CHECK (Geyser IN ('Yes','No')),
-StartingAt INT NOT NULL,
+StartingAt FLOAT NOT NULL,
 Discount FLOAT
 )
 
@@ -106,10 +106,10 @@ CREATE PROCEDURE HBMS.AddHotel
 @hotelname VARCHAR(40),
 @location VARCHAR(30),
 @hoteltype VARCHAR(10),
-@rating INT,
+@rating FLOAT,
 @wifi VARCHAR (5),
 @geyser VARCHAR (5),
-@startingat INT,
+@startingat FLOAT,
 @discount FLOAT
 AS
     BEGIN
@@ -125,8 +125,6 @@ AS
 		SELECT * FROM HBMS.Hotels
 	END
 GO
-
-UPDATE HBMS.Hotels SET HotelType='*****' WHERE HotelID=1000
 
 --Procedure for Deleting a Hotel by HotelID
 
@@ -148,6 +146,26 @@ AS
 	END
 GO
 
+--Procedure for Search for a Hotel by HotelID
+
+CREATE PROCEDURE HBMS.SearchHotelByID
+@hotelid INT
+AS
+	BEGIN
+		SELECT * FROM HBMS.Hotels WHERE HotelID = @hotelid
+	END
+GO
+
+--Procedure for Search for a Hotel by HotelName
+
+CREATE PROCEDURE HBMS.SearchHotelByName
+@hotelname VARCHAR(40)
+AS
+	BEGIN
+		SELECT * FROM HBMS.Hotels WHERE HotelName LIKE ('%'+@hotelname+'%') AND @hotelname <> '' 
+	END
+GO
+
 
 --Procedure for Modifying a Hotel by HotelID
 
@@ -159,7 +177,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByID
 @rating FLOAT,
 @wifi VARCHAR (5),
 @geyser VARCHAR (5),
-@startingat INT,
+@startingat FLOAT,
 @discount FLOAT
 AS
     BEGIN
@@ -173,14 +191,14 @@ CREATE PROCEDURE HBMS.ModifyHotelByName
 @hotelname VARCHAR(40),
 @location VARCHAR(30),
 @hoteltype VARCHAR(10),
-@rating INT,
+@rating FLOAT,
 @wifi VARCHAR (5),
 @geyser VARCHAR (5),
-@startingat INT,
+@startingat FLOAT,
 @discount FLOAT
 AS
     BEGIN
-        UPDATE HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
+        UPDATE HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
     END
 GO
 
@@ -300,18 +318,6 @@ AS
     END
 GO
 
---Procedure to check if Rooms are available
-
-CREATE PROCEDURE HBMS.AvailableRooms
-@hotelid INT,
-@bookingfrom DATE,
-@bookingto DATE
-AS
-	BEGIN
-		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND HotelID=@hotelid
-    END
-GO
-
 --Procedure to Cancel Rooms
 
 CREATE PROCEDURE HBMS.CancelRooms
@@ -352,38 +358,54 @@ GO
 --Procedure for Searching a Room by RoomType
 
 CREATE PROCEDURE HBMS.SearchRoomByType
+@location VARCHAR(30),
 @roomtype VARCHAR(10),
 @bookingfrom DATE,
 @bookingto DATE
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
 	END
 GO
 
 --Procedure for Searching a Room by Beds
 
 CREATE PROCEDURE HBMS.SearchRoomByBeds
+@location VARCHAR(30),
 @beds VARCHAR(10),
 @bookingfrom DATE,
 @bookingto DATE
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))
+		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
 	END
 GO
 
 --Procedure for Searching a Room by RoomType and Beds
 
 CREATE PROCEDURE HBMS.SearchRoomByTypeAndBeds
+@location VARCHAR(30),
 @roomtype VARCHAR(10),
 @beds VARCHAR(10),
 @bookingfrom DATE,
 @bookingto DATE
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) 
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto))  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
 	END
 GO
+
+--Procedure to check if Rooms are available by location
+
+CREATE PROCEDURE HBMS.SearchRoomByLocationAndDates
+@location VARCHAR(30),
+@bookingfrom DATE,
+@bookingto DATE
+AS
+	BEGIN
+		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)) AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+    END
+GO
+
 
 
