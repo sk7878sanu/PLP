@@ -1,4 +1,4 @@
-﻿using HBMS_WebAPI.Models;
+using HBMS_WebAPI.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -112,15 +112,15 @@ namespace HBMS_WebAPI.Controllers
         }
 
         [HttpPut]
-        public bool ChangePassword(string loginid,string password,string passwordnew)
+        public bool ChangePassword(UserAccount user,string passwordnew)
         {
             bool changed = false;
             try
             {
                 cmd = new SqlCommand("HBMS.ChangePassword", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@loginid", loginid);
-                cmd.Parameters.AddWithValue("@password", password);
+                cmd.Parameters.AddWithValue("@loginid", user.UserName);
+                cmd.Parameters.AddWithValue("@password", user.Password);
                 cmd.Parameters.AddWithValue("@passwordnew", passwordnew);
                 conn.Open();
                 int result = cmd.ExecuteNonQuery();
@@ -141,17 +141,17 @@ namespace HBMS_WebAPI.Controllers
         }
 
         [HttpPut]
-        public bool ChangeDetails(string username, string email, string phoneno, string name)
+        public bool ChangeDetails(UserAccount user)
         {
             bool changed = false;
             try
             {
-                cmd = new SqlCommand("HBMS.ChangePassword", conn);
+                cmd = new SqlCommand("HBMS.ChangeDetails", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@username", username);
-                cmd.Parameters.AddWithValue("@email", email);
-                cmd.Parameters.AddWithValue("@phoneno", phoneno);
-                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@username", user.UserName);
+                cmd.Parameters.AddWithValue("@email", user.Email);
+                cmd.Parameters.AddWithValue("@phoneno", user.PhoneNo);
+                cmd.Parameters.AddWithValue("@name", user.Name);
                 conn.Open();
                 int result = cmd.ExecuteNonQuery();
                 if (result > 0)
