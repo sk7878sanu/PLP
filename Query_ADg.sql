@@ -79,7 +79,7 @@ CREATE PROCEDURE HBMS.ChangePassword
 @passwordnew VARCHAR(20)
 AS
 	BEGIN
-		UPDATE HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+		UPDATETIME HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
 	END
 GO
 
@@ -91,11 +91,38 @@ CREATE PROCEDURE HBMS.ChangeDetails
 @name VARCHAR(50)
 AS
 	BEGIN
-		UPDATE HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
+		UPDATETIME HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
 	END
 GO
--------------------------------------------------------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+EXEC HBMS.UserAlreadyExist @username='dfg',@email='ag@c.com',@phoneno='9836894970'
+
+EXEC HBMS.RegisterUser @username='deg',@email='a@c.com',@phoneno='9836894070',@name='Anyone',@password='password',@usertype='Employee'
+
+EXEC HBMS.VerifyLogin @loginid='a@c.com', @password='password'
+
+SELECT username,name,convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash)) FROM HBMS.Users 
+SELECT * FROM HBMS.Users 
+
+EXEC HBMS.ChangePassword @loginid='satish08', @password='123', @passwordnew='123456'
+
+
+
+CREATE PROCEDURE HBMS.RateHotels
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 --Creating Table for Storing Hotel Details
 
@@ -193,7 +220,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByID
 @discount FLOAT
 AS
     BEGIN
-        UPDATE HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
+        UPDATETIME HBMS.Hotels SET HotelName=@hotelname,Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelID = @hotelid
     END
 GO
 
@@ -210,7 +237,7 @@ CREATE PROCEDURE HBMS.ModifyHotelByName
 @discount FLOAT
 AS
     BEGIN
-        UPDATE HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
+        UPDATETIME HBMS.Hotels SET Location=@location,HotelType=@hoteltype,Rating=@rating,WiFi=@wifi,Geyser=@geyser,StartingAt=@startingat,Discount=@discount WHERE HotelName = @hotelname
     END
 GO
 
@@ -274,7 +301,7 @@ CREATE PROCEDURE HBMS.ModifyRoomByID
 @roomtype VARCHAR(10)
 AS
     BEGIN
-        UPDATE HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
+        UPDATETIME HBMS.RoomDetails SET RoomNo=@roomno,HotelID=@hotelid,Price=@price,Beds=@beds,RoomType=@roomtype WHERE RoomID = @roomid
     END
 GO
 
@@ -300,8 +327,8 @@ BookingID INT IDENTITY(1000,1) PRIMARY KEY,
 UserID INT NOT NULL FOREIGN KEY (UserID) REFERENCES HBMS.Users(UserID) ON DELETE CASCADE,
 GuestName VARCHAR(40) NOT NULL,
 RoomID INT NOT NULL FOREIGN KEY (RoomID) REFERENCES HBMS.RoomDetails(RoomID) ON DELETE CASCADE,
-BookingFrom DATE NOT NULL,
-BookingTo DATE NOT NULL,
+BookingFrom DATETIME NOT NULL,
+BookingTo DATETIME NOT NULL,
 GuestNum INT NOT NULL CHECK (GuestNum IN (1,2,3)),
 BreakfastIncluded VARCHAR (5) NOT NULL CHECK (BreakfastIncluded IN ('Yes','No')),
 TotalAmount FLOAT NOT NULL,
@@ -315,8 +342,8 @@ CREATE PROCEDURE HBMS.BookRooms
 @guestname VARCHAR(40),
 @roomtype VARCHAR(10),
 @hotelid INT,
-@bookingfrom DATE,
-@bookingto DATE,
+@bookingfrom DATETIME,
+@bookingto DATETIME,
 @beds VARCHAR(10),
 @guestnum INT,
 @breakfastincluded VARCHAR (5),
@@ -384,17 +411,26 @@ GO
 
 --Procedure to Change Room
 
-CREATE PROCEDURE HBMS.ChangeRoom
-@bookingid INT,
-@roomtype VARCHAR(10),
+CREATE PROCEDURE HBMS.ViewAvailableRooms
+@hotelid INT,
 @beds VARCHAR(10),
-@bookingfrom DATE,
-@bookingto DATE
+@location VARCHAR(30),
+@roomtype VARCHAR(10),
+@bookingfrom DATETIME,
+@bookingto DATETIME
 AS
 	BEGIN
-		DECLARE @room1 INT
-		SET @room1 = (SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomType=@roomtype AND Beds=@beds)
-		UPDATE HBMS.BookingDetails SET RoomID=@room1 WHERE BookingID=@bookingid
+		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
+	END
+GO
+
+
+CREATE PROCEDURE HBMS.ChangeRoom
+@bookingid INT,
+@roomid INT
+AS
+	BEGIN
+		UPDATE HBMS.BookingDetails SET RoomID=@roomid WHERE BookingID=@bookingid
     END
 GO
 
@@ -405,8 +441,8 @@ GO
 CREATE PROCEDURE HBMS.SearchRoomByType
 @location VARCHAR(30),
 @roomtype VARCHAR(10),
-@bookingfrom DATE,
-@bookingto DATE
+@bookingfrom DATETIME,
+@bookingto DATETIME
 AS
 	BEGIN
 		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
@@ -418,8 +454,8 @@ GO
 CREATE PROCEDURE HBMS.SearchRoomByBeds
 @location VARCHAR(30),
 @beds VARCHAR(10),
-@bookingfrom DATE,
-@bookingto DATE
+@bookingfrom DATETIME,
+@bookingto DATETIME
 AS
 	BEGIN
 		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
@@ -432,8 +468,8 @@ CREATE PROCEDURE HBMS.SearchRoomByTypeAndBeds
 @location VARCHAR(30),
 @roomtype VARCHAR(10),
 @beds VARCHAR(10),
-@bookingfrom DATE,
-@bookingto DATE
+@bookingfrom DATETIME,
+@bookingto DATETIME
 AS
 	BEGIN
 		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
@@ -444,15 +480,10 @@ GO
 
 CREATE PROCEDURE HBMS.SearchRoomByLocationAndDates
 @location VARCHAR(30),
-@bookingfrom DATE,
-@bookingto DATE
+@bookingfrom DATETIME,
+@bookingto DATETIME
 AS
 	BEGIN
 		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HSMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HSMS.Hotels WHERE Location=@location))
     END
 GO
-
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-REPORTS
------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
