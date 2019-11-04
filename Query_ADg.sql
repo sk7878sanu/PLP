@@ -336,6 +336,7 @@ AS
     END
 GO
 
+
 --Procedure to Delete a Booking by BookingID
 
 
@@ -347,9 +348,10 @@ AS
     END
 GO
 
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --Procedure to Cancel Rooms
 
-CREATE PROCEDURE HBMS.CancelRooms
+CREATE PROCEDURE HBMS.CancelBooking
 @bookingid INT
 AS
 	BEGIN
