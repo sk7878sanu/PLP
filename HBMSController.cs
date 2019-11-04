@@ -926,10 +926,10 @@ namespace HBMS_API.Controllers
             bool bookingChanged = false;
             try
             {
-                cmd = new SqlCommand("HBMS.ChangeGuestNumber", conn);
+                cmd = new SqlCommand("HBMS.ChangeRoom", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@bookingid", id);
-                cmd.Parameters.AddWithValue("@guestnum", guestnum);
+                cmd.Parameters.AddWithValue("@roomid", guestnum);
 
 
                 conn.Open();
@@ -948,6 +948,11 @@ namespace HBMS_API.Controllers
                 conn.Close();
             }
             return bookingChanged;
+
         }
+
+        
+
+
     }
 }
