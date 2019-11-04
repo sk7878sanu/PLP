@@ -27,22 +27,22 @@ CREATE PROCEDURE HBMS.UserAlreadyExist
 @phoneno VARCHAR(10)
 AS
 DECLARE @ret INT
-    BEGIN
-        SET @ret=0
-        IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE UserName=@username)>0
-            BEGIN
-                SET @ret=@ret+1
-            END
-        IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE Email=@email)>0
-            BEGIN
-                SET @ret=@ret+10
-            END
-        IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE PhoneNo=@phoneno)>0
-            BEGIN
-                SET @ret=@ret+100
-            END
-        SELECT @ret
-    END
+	BEGIN
+		SET @ret=0
+		IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE UserName=@username)>0
+			BEGIN
+				SET @ret=@ret+1
+			END
+		IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE Email=@email)>0
+			BEGIN
+				SET @ret=@ret+10
+			END
+		IF (SELECT COUNT(UserID) FROM HBMS.Users WHERE PhoneNo=@phoneno)>0
+			BEGIN
+				SET @ret=@ret+100
+			END
+		SELECT @ret
+	END
 GO
 
 --Procedure for Registering the User
@@ -51,13 +51,13 @@ CREATE PROCEDURE HBMS.RegisterUser
 @username VARCHAR(40),
 @email VARCHAR(40),
 @phoneno VARCHAR(10),
-@name VARCHAR(20),
+@name VARCHAR(50),
 @password VARCHAR(20),
 @usertype VARCHAR(15)
 AS
-    BEGIN
-        INSERT INTO HBMS.Users VALUES(@username,@email,@phoneno,@name,EncryptByPassPhrase('2b|!2biet?',@password),@usertype)
-    END
+	BEGIN
+		INSERT INTO HBMS.Users VALUES(@username,@email,@phoneno,@name,EncryptByPassPhrase('2b|!2biet?',@password),@usertype)
+	END
 GO
 
 --Procedure for Verifying Login Credentials
@@ -66,9 +66,9 @@ CREATE PROCEDURE HBMS.VerifyLogin
 @loginid VARCHAR(40),
 @password VARCHAR(20)
 AS
-    BEGIN
-        SELECT * FROM HBMS.Users WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password) OR (Email=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password) OR (PhoneNo=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
-    END
+	BEGIN
+		SELECT * FROM HBMS.Users WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password) OR (Email=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password) OR (PhoneNo=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+	END
 GO
 
 
@@ -78,9 +78,21 @@ CREATE PROCEDURE HBMS.ChangePassword
 @password VARCHAR(20),
 @passwordnew VARCHAR(20)
 AS
-    BEGIN
-        UPDATE HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
-    END
+	BEGIN
+		UPDATE HBMS.Users SET PasswordHash=EncryptByPassPhrase('2b|!2biet?',@passwordnew) WHERE (UserName=@loginid AND convert(varchar(20),DecryptByPassPhrase('2b|!2biet?', PasswordHash))=@password)
+	END
+GO
+
+--For Changing Details
+CREATE PROCEDURE HBMS.ChangeDetails
+@username VARCHAR(40),
+@email VARCHAR(40),
+@phoneno VARCHAR(10),
+@name VARCHAR(50)
+AS
+	BEGIN
+		UPDATE HBMS.Users SET Name=@name,Email=@email,PhoneNo=@phoneno WHERE UserName=@username
+	END
 GO
 -------------------------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------------
