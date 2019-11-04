@@ -492,18 +492,15 @@ AS
 GO
 
 
-EXEC HBMS.RateHotels @userrating=5,@bookingid=1000,@hotelid=1000
-
-SELECT * FROM HBMS.Users
-
-SELECT * FROM HBMS.Hotels
-
-INSERT INTO HBMS.Hotels VALUES ('Sonar Bangla','Kolkata','*****',4.5,'Yes','Yes',40000,0.2)
-
-SELECT * FROM HBMS.RoomDetails
-
-INSERT INTO HBMS.RoomDetails VALUES ('101',1000,50000,'Single(1X)','Deluxe')
-
-SELECT * FROM HBMS.BookingDetails
-
-INSERT INTO HBMS.BookingDetails VALUES (1000,'Soumyadip',1000,'11/04/2019','12/04/2019',2,'Yes',50000,'Confirmed',null)
+CREATE PROCEDURE HBMS.RateHotels
+@userrating INT,
+@bookingid INT,
+@hotelid INT
+AS
+	BEGIN
+		Declare @avg FLOAT
+		UPDATE HBMS.BookingDetails SET Rating=@userrating WHERE BookingID=@bookingid
+		SET @avg=(SELECT Avg(Rating) FROM HBMS.BookingDetails WHERE Rating IS NOT NULL AND RoomID IN(SELECT RoomID FROM RoomDetails Where HotelID=@HotelID))
+		UPDATE HBMS.Hotels SET Rating=@avg WHERE HotelID=@hotelid
+	END
+GO
