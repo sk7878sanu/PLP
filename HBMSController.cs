@@ -951,8 +951,191 @@ namespace HBMS_API.Controllers
 
         }
 
-        
+        //Filter Methods
+
+        [HttpGet]
+        public List<RoomDetail> GetRoomsByType(string location,string roomtype,DateTime bookingfrom, DateTime bookingto) //Filter Rooms by RoomType
+        {
+            List<RoomDetail> roomList = new List<RoomDetail>();
+            try
+            {
+                cmd = new SqlCommand("HBMS.SearchRoomByType", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@location", location);
+                cmd.Parameters.AddWithValue("@roomtype", roomtype);
+                cmd.Parameters.AddWithValue("@bookingfrom", bookingfrom);
+                cmd.Parameters.AddWithValue("@bookingto", bookingto);
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable roomTable = new DataTable();
+
+                roomTable.Load(reader);
+
+                for (int i = 0; i < roomTable.Rows.Count; i++)
+                {
+                    RoomDetail room = new RoomDetail();
+
+                    room.RoomID = (int)roomTable.Rows[i][0];
+                    room.RoomNo = (int)roomTable.Rows[i][1];
+                    room.HotelID = (int)roomTable.Rows[i][2];
+                    room.Price = (double)roomTable.Rows[i][3];
+                    room.Beds = (string)roomTable.Rows[i][4];
+                    room.RoomType = (string)roomTable.Rows[i][5];
+
+                    roomList.Add(room);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return roomList;
+
+        }
+
+        [HttpGet]
+        public List<RoomDetail> GetRoomsByBeds(string location, string beds, DateTime bookingfrom, DateTime bookingto) //Filter Rooms by Beds
+        {
+            List<RoomDetail> roomList = new List<RoomDetail>();
+            try
+            {
+                cmd = new SqlCommand("HBMS.SearchRoomByBeds", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@location", location);
+                cmd.Parameters.AddWithValue("@beds", beds);
+                cmd.Parameters.AddWithValue("@bookingfrom", bookingfrom);
+                cmd.Parameters.AddWithValue("@bookingto", bookingto);
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable roomTable = new DataTable();
+
+                roomTable.Load(reader);
+
+                for (int i = 0; i < roomTable.Rows.Count; i++)
+                {
+                    RoomDetail room = new RoomDetail();
+
+                    room.RoomID = (int)roomTable.Rows[i][0];
+                    room.RoomNo = (int)roomTable.Rows[i][1];
+                    room.HotelID = (int)roomTable.Rows[i][2];
+                    room.Price = (double)roomTable.Rows[i][3];
+                    room.Beds = (string)roomTable.Rows[i][4];
+                    room.RoomType = (string)roomTable.Rows[i][5];
+
+                    roomList.Add(room);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return roomList;
+
+        }
 
 
+        [HttpGet]
+        public List<RoomDetail> GetRoomsByTypesAndBeds(string location, string roomtype, string beds, DateTime bookingfrom, DateTime bookingto) //Filter Rooms by Beds and RoomType
+        {
+            List<RoomDetail> roomList = new List<RoomDetail>();
+            try
+            {
+                cmd = new SqlCommand("HBMS.SearchRoomByTypeAndBeds", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@location", location);
+                cmd.Parameters.AddWithValue("@roomtype", roomtype);
+                cmd.Parameters.AddWithValue("@beds", beds);
+                cmd.Parameters.AddWithValue("@bookingfrom", bookingfrom);
+                cmd.Parameters.AddWithValue("@bookingto", bookingto);
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable roomTable = new DataTable();
+
+                roomTable.Load(reader);
+
+                for (int i = 0; i < roomTable.Rows.Count; i++)
+                {
+                    RoomDetail room = new RoomDetail();
+
+                    room.RoomID = (int)roomTable.Rows[i][0];
+                    room.RoomNo = (int)roomTable.Rows[i][1];
+                    room.HotelID = (int)roomTable.Rows[i][2];
+                    room.Price = (double)roomTable.Rows[i][3];
+                    room.Beds = (string)roomTable.Rows[i][4];
+                    room.RoomType = (string)roomTable.Rows[i][5];
+
+                    roomList.Add(room);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return roomList;
+
+        }
+
+        [HttpGet]
+        public List<RoomDetail> GetRoomsByLocationAndDates(string location, string roomtype, string beds, DateTime bookingfrom, DateTime bookingto) //Filter Rooms only by Location and Dates
+        {
+            List<RoomDetail> roomList = new List<RoomDetail>();
+            try
+            {
+                cmd = new SqlCommand("HBMS.SearchRoomByLocationAndDates", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@location", location);
+                cmd.Parameters.AddWithValue("@bookingfrom", bookingfrom);
+                cmd.Parameters.AddWithValue("@bookingto", bookingto);
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable roomTable = new DataTable();
+
+                roomTable.Load(reader);
+
+                for (int i = 0; i < roomTable.Rows.Count; i++)
+                {
+                    RoomDetail room = new RoomDetail();
+
+                    room.RoomID = (int)roomTable.Rows[i][0];
+                    room.RoomNo = (int)roomTable.Rows[i][1];
+                    room.HotelID = (int)roomTable.Rows[i][2];
+                    room.Price = (double)roomTable.Rows[i][3];
+                    room.Beds = (string)roomTable.Rows[i][4];
+                    room.RoomType = (string)roomTable.Rows[i][5];
+
+                    roomList.Add(room);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return roomList;
+
+        }
     }
 }
