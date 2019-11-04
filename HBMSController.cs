@@ -714,6 +714,7 @@ namespace HBMS_API.Controllers
                 cmd.Parameters.AddWithValue("@guestnum", booking.GuestNum);
                 cmd.Parameters.AddWithValue("@breakfastincluded",booking.BreakfastIncluded);
                 cmd.Parameters.AddWithValue("@totalamount",booking.TotalAmount);
+                cmd.Parameters.AddWithValue("@rating", null);
 
                 conn.Open();
                 int result = cmd.ExecuteNonQuery();
@@ -765,6 +766,7 @@ namespace HBMS_API.Controllers
                     booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
                     booking.TotalAmount = (double)bookingTable.Rows[i][8];
                     booking.BookingStatus = (string)bookingTable.Rows[i][9];
+                    booking.Rating = (double)bookingTable.Rows[i][10];
 
                     bookingList.Add(booking);
                 }
@@ -813,6 +815,7 @@ namespace HBMS_API.Controllers
                     booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
                     booking.TotalAmount = (double)bookingTable.Rows[i][8];
                     booking.BookingStatus = (string)bookingTable.Rows[i][9];
+                    booking.Rating = (double)bookingTable.Rows[i][10];
 
                 }
             }
@@ -920,16 +923,53 @@ namespace HBMS_API.Controllers
             return bookingChanged;
         }
 
+        [HttpGet]
+        public List<int> GetAvailableRooms(int id, string beds, string location, string roomtype, DateTime from, DateTime to)
+        {
+            List<int> rooms = new List<int>();
+            try
+            {
+                cmd = new SqlCommand("HBMS.ViewAvailableRooms", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@hotelid", id);
+                cmd.Parameters.AddWithValue("@beds", beds);
+                cmd.Parameters.AddWithValue("@location", location);
+                cmd.Parameters.AddWithValue("@roomtype", roomtype);
+                cmd.Parameters.AddWithValue("@bookingfrom", from);
+                cmd.Parameters.AddWithValue("@bookingto", to);
+
+                conn.Open();
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable dataTable = new DataTable();
+                dataTable.Load(reader);
+                for (int i = 0; i < dataTable.Rows.Count; i++)
+                {
+                    rooms.Add((int)dataTable.Rows[i][0]);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return rooms;
+        }
+
         [HttpPut]
-        public bool PutChangeRoomByID(int? id, string guestnum) //Modify Booking (Change Room) by ID
+        public bool PutChangeRoomByID(int? bookingid, int? roomid) //Modify Booking (Change Room) by ID
         {
             bool bookingChanged = false;
             try
             {
                 cmd = new SqlCommand("HBMS.ChangeRoom", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@bookingid", id);
-                cmd.Parameters.AddWithValue("@roomid", guestnum);
+                cmd.Parameters.AddWithValue("@bookingid", bookingid);
+                cmd.Parameters.AddWithValue("@roomid", roomid);
 
 
                 conn.Open();
@@ -949,6 +989,43 @@ namespace HBMS_API.Controllers
             }
             return bookingChanged;
 
+        }
+
+        //User Rating Method
+
+        [HttpPut]
+        public bool PutUserRating(double userrating, int bookingid,int hotelid)
+        {
+            bool ratingAdded = false;
+
+            try
+            {
+                cmd = new SqlCommand("HBMS.RateHotels", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@userrating", userrating);
+                cmd.Parameters.AddWithValue("@bookingid", bookingid);
+                cmd.Parameters.AddWithValue("@hotelid", hotelid);
+
+                conn.Open();
+
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    ratingAdded = true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+
+            return ratingAdded;
         }
 
         //Filter Methods
