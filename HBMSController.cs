@@ -780,6 +780,174 @@ namespace HBMS_API.Controllers
             return bookingList;
         }
 
+        [HttpGet]
+        public BookingDetail GetBookingByID(int? id) //Search Booking Details by ID
+        {
+            BookingDetail booking = new BookingDetail();
 
+            try
+            {
+                cmd = new SqlCommand("HBMS.SearchBookingByID", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@bookingid", id);
+
+                conn.Open();
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable bookingTable = new DataTable();
+
+                bookingTable.Load(reader);
+
+                for (int i = 0; i < bookingTable.Rows.Count; i++)
+                {
+
+                    booking.BookingID = (int)bookingTable.Rows[i][0];
+                    booking.UserID = (int)bookingTable.Rows[i][1];
+                    booking.GuestName = (string)bookingTable.Rows[i][2];
+                    booking.RoomID = (int)bookingTable.Rows[i][3];
+                    booking.BookingFrom = (DateTime)bookingTable.Rows[i][4];
+                    booking.BookingTo = (DateTime)bookingTable.Rows[i][5];
+                    booking.GuestNum = (int)bookingTable.Rows[i][6];
+                    booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
+                    booking.TotalAmount = (double)bookingTable.Rows[i][8];
+                    booking.BookingStatus = (string)bookingTable.Rows[i][9];
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return booking;
+        }
+
+        [HttpDelete]
+        public bool DeleteBookingByID(int? id) //Delete a Booking Details by ID
+        {
+            bool bookingDeleted = false;
+
+            try
+            {
+                cmd = new SqlCommand("HBMS.DeleteBookingByID", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@bookingid", id);
+
+                conn.Open();
+
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    bookingDeleted = true;
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+
+            return bookingDeleted;
+        }
+
+        [HttpPut]
+        public bool PutCancelRoomsByID(int? id) //Modify Booking (Cancel booking) by ID
+        {
+            bool bookingCancelled = false;
+            try
+            {
+                cmd = new SqlCommand("HBMS.CancelBooking", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@bookingid",id);
+
+
+                conn.Open();
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    bookingCancelled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return bookingCancelled;
+        }
+
+        [HttpPut]
+        public bool PutChangeGuestNumberByID(int? id,string guestnum) //Modify Booking (Change Guest Number) by ID
+        {
+            bool bookingChanged = false;
+            try
+            {
+                cmd = new SqlCommand("HBMS.ChangeGuestNumber", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@bookingid", id);
+                cmd.Parameters.AddWithValue("@guestnum", guestnum);
+
+
+                conn.Open();
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    bookingChanged = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return bookingChanged;
+        }
+
+        [HttpPut]
+        public bool PutChangeRoomByID(int? id, string guestnum) //Modify Booking (Change Room) by ID
+        {
+            bool bookingChanged = false;
+            try
+            {
+                cmd = new SqlCommand("HBMS.ChangeGuestNumber", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@bookingid", id);
+                cmd.Parameters.AddWithValue("@guestnum", guestnum);
+
+
+                conn.Open();
+                int result = cmd.ExecuteNonQuery();
+                if (result > 0)
+                {
+                    bookingChanged = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return bookingChanged;
+        }
     }
 }
