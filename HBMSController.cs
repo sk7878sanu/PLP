@@ -1214,5 +1214,157 @@ namespace HBMS_API.Controllers
             return roomList;
 
         }
+
+
+        //Admin Reports
+
+        [HttpGet]
+        public List<BookingDetail> GetAllHotelBookings(int? hotelid) //list all Booking Details for a specified hotel
+        {
+            List<BookingDetail> bookingList = new List<BookingDetail>();
+
+            try
+            {
+                cmd = new SqlCommand("HBMS.ViewAllHotelBookings", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@hotelid", hotelid);
+
+                conn.Open();
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable bookingTable = new DataTable();
+
+                bookingTable.Load(reader);
+
+                for (int i = 0; i < bookingTable.Rows.Count; i++)
+                {
+                    BookingDetail booking = new BookingDetail();
+
+                    booking.BookingID = (int)bookingTable.Rows[i][0];
+                    booking.UserID = (int)bookingTable.Rows[i][1];
+                    booking.GuestName = (string)bookingTable.Rows[i][2];
+                    booking.RoomID = (int)bookingTable.Rows[i][3];
+                    booking.BookingFrom = (DateTime)bookingTable.Rows[i][4];
+                    booking.BookingTo = (DateTime)bookingTable.Rows[i][5];
+                    booking.GuestNum = (int)bookingTable.Rows[i][6];
+                    booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
+                    booking.TotalAmount = (double)bookingTable.Rows[i][8];
+                    booking.BookingStatus = (string)bookingTable.Rows[i][9];
+                    booking.Rating = (double)bookingTable.Rows[i][10];
+
+                    bookingList.Add(booking);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return bookingList;
+        }
+
+        //[HttpGet]
+        //public List<BookingDetail> GetHotelGuestList(int? hotelid) //list guest list for a specified hotel
+        //{
+        //    List<BookingDetail> bookingList = new List<BookingDetail>();
+
+        //    try
+        //    {
+        //        cmd = new SqlCommand("HBMS.ViewHotelGuestList", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@hotelid", hotelid);
+
+        //        conn.Open();
+
+        //        SqlDataReader reader = cmd.ExecuteReader();
+
+        //        DataTable bookingTable = new DataTable();
+
+        //        bookingTable.Load(reader);
+
+        //        for (int i = 0; i < bookingTable.Rows.Count; i++)
+        //        {
+        //            BookingDetail booking = new BookingDetail();
+
+        //            booking.BookingID = (int)bookingTable.Rows[i][0];
+        //            booking.UserID = (int)bookingTable.Rows[i][1];
+        //            booking.GuestName = (string)bookingTable.Rows[i][2];
+        //            booking.RoomID = (int)bookingTable.Rows[i][3];
+        //            booking.BookingFrom = (DateTime)bookingTable.Rows[i][4];
+        //            booking.BookingTo = (DateTime)bookingTable.Rows[i][5];
+        //            booking.GuestNum = (int)bookingTable.Rows[i][6];
+        //            booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
+        //            booking.TotalAmount = (double)bookingTable.Rows[i][8];
+        //            booking.BookingStatus = (string)bookingTable.Rows[i][9];
+        //            booking.Rating = (double)bookingTable.Rows[i][10];
+
+        //            bookingList.Add(booking);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //    finally
+        //    {
+        //        conn.Close();
+        //    }
+        //    return bookingList;
+        //}
+
+
+        [HttpGet]
+        public List<BookingDetail> GetBookingsByDate(DateTime? searchdate) //list all Booking Details for a specified date
+        {
+            List<BookingDetail> bookingList = new List<BookingDetail>();
+
+            try
+            {
+                cmd = new SqlCommand("HBMS.DisplayBookingsForDate", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@searchdate", searchdate);
+
+                conn.Open();
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                DataTable bookingTable = new DataTable();
+
+                bookingTable.Load(reader);
+
+                for (int i = 0; i < bookingTable.Rows.Count; i++)
+                {
+                    BookingDetail booking = new BookingDetail();
+
+                    booking.BookingID = (int)bookingTable.Rows[i][0];
+                    booking.UserID = (int)bookingTable.Rows[i][1];
+                    booking.GuestName = (string)bookingTable.Rows[i][2];
+                    booking.RoomID = (int)bookingTable.Rows[i][3];
+                    booking.BookingFrom = (DateTime)bookingTable.Rows[i][4];
+                    booking.BookingTo = (DateTime)bookingTable.Rows[i][5];
+                    booking.GuestNum = (int)bookingTable.Rows[i][6];
+                    booking.BreakfastIncluded = (string)bookingTable.Rows[i][7];
+                    booking.TotalAmount = (double)bookingTable.Rows[i][8];
+                    booking.BookingStatus = (string)bookingTable.Rows[i][9];
+                    booking.Rating = (double)bookingTable.Rows[i][10];
+
+                    bookingList.Add(booking);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                conn.Close();
+            }
+            return bookingList;
+        }
+
     }
 }
