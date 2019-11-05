@@ -1,0 +1,77 @@
+[HttpPost]
+        public ActionResult Home(string City,DateTime checkIn,DateTime checkOut,string roomType,string bedType)
+        {
+            //if (LoggedInUser != null)
+            //{
+            string searchby = null;
+            if (City == null || City == "")
+            {
+                ModelState.AddModelError("City", "Please Enter Valid City");
+            }
+            if ((roomType == null || roomType == "") && (bedType != "" && bedType != null))
+            {
+                searchby = "bedtype";
+            }
+            if ((bedType == null || bedType == "") && (roomType != "" && roomType != null))
+            {
+                searchby = "roomtype";
+            }
+            switch (roomType)
+            {
+                case "1":
+                    roomType = "Deluxe";
+                    break;
+                case "2":
+                    roomType = "Standard";
+                    break;
+            }
+            switch(bedType)
+            {
+            case "1":
+                bedType = "Single(1X)";
+                break;
+            case "2":
+                bedType = "Classic(2X)";
+                break;
+            case "3":
+                bedType = "Suit(3X)";
+                break;
+            }
+            if (ModelState.IsValid)
+            {
+                List<RoomDetails> result=null;
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://localhost:63531/api/");
+                    string query = null;
+                    if (searchby==null)
+                    {
+                        query = $"HBMS/GetRoomsByTypesAndBeds?location={City}&bookingfrom={checkIn}&bookingto={checkOut}&roomtype={roomType}&bedtype={bedType}";
+                    }
+                    if(searchby=="roomtype")
+                    {
+                        query = $"HBMS/GetRoomsByTypes?location={City}&roomtype={roomType}&bookingfrom={checkIn}&bookingto={checkOut}";
+                    }
+                    if(searchby=="bedtype")
+                    {
+                        query = $"HBMS/GetRoomsByBeds?location={City}&beds={bedType}&bookingfrom={checkIn}&bookingto={checkOut}";
+                    }
+                    var responseTask = client.GetAsync(query);
+                    responseTask.Wait();
+                    var res = responseTask.Result;
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var readTask = res.Content.ReadAsAsync<List<RoomDetails>>();
+                        readTask.Wait();
+                        result = readTask.Result;
+                    }
+                }
+                ModelForBooking modelForBooking = new ModelForBooking();
+                modelForBooking.roomDetails = result;
+                modelForBooking.userAccount = LoggedInUser;
+                return View("SearchRooms",modelForBooking);
+            }
+            //}
+            return View();
+        }
+        
