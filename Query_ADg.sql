@@ -238,7 +238,7 @@ RoomID INT IDENTITY(1000,1) PRIMARY KEY,
 RoomNo INT NOT NULL,
 HotelID INT NOT NULL FOREIGN KEY (HotelID) REFERENCES HBMS.Hotels(HotelID) ON DELETE CASCADE,
 Price FLOAT NOT NULL,
-Beds VARCHAR(10) NOT NULL CHECK(Beds IN ('Single(1X)','Classic(2X)','Suite(3X)')),
+Beds VARCHAR(12) NOT NULL CHECK(Beds IN ('Single(1X)','Classic(2X)','Suite(3X)')),
 RoomType VARCHAR(10) NOT NULL CHECK (RoomType IN ('Deluxe','Standard'))
 --BookingID INT NOT NULL FOREIGN KEY (BookingID) REFERENCES HBMS.BookingDetails(BookingID)
 )
@@ -249,7 +249,7 @@ CREATE PROCEDURE HBMS.AddRooms
 @roomno INT,
 @hotelid INT,
 @price FLOAT,
-@beds VARCHAR(10),
+@beds VARCHAR(12),
 @roomtype VARCHAR(10)
 AS
     BEGIN
@@ -283,7 +283,7 @@ CREATE PROCEDURE HBMS.ModifyRoomByID
 @roomno INT,
 @hotelid INT,
 @price FLOAT,
-@beds VARCHAR(10),
+@beds VARCHAR(12),
 @roomtype VARCHAR(10)
 AS
     BEGIN
@@ -331,7 +331,7 @@ CREATE PROCEDURE HBMS.BookRooms
 @hotelid INT,
 @bookingfrom DATETIME,
 @bookingto DATETIME,
-@beds VARCHAR(10),
+@beds VARCHAR(12),
 @guestnum INT,
 @breakfastincluded VARCHAR (5),
 @totalamount FLOAT,
@@ -401,14 +401,14 @@ GO
 
 CREATE PROCEDURE HBMS.ViewAvailableRooms
 @hotelid INT,
-@beds VARCHAR(10),
+@beds VARCHAR(12),
 @location VARCHAR(30),
 @roomtype VARCHAR(10),
 @bookingfrom DATETIME,
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
+		SELECT RoomID FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -435,7 +435,7 @@ CREATE PROCEDURE HBMS.SearchRoomByType
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -443,12 +443,12 @@ GO
 
 CREATE PROCEDURE HBMS.SearchRoomByBeds
 @location VARCHAR(30),
-@beds VARCHAR(10),
+@beds VARCHAR(12),
 @bookingfrom DATETIME,
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
 
@@ -457,14 +457,18 @@ GO
 CREATE PROCEDURE HBMS.SearchRoomByTypeAndBeds
 @location VARCHAR(30),
 @roomtype VARCHAR(10),
-@beds VARCHAR(10),
+@beds VARCHAR(12),
 @bookingfrom DATETIME,
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
 	END
 GO
+
+exec HBMS.SearchRoomByTypeAndBeds @location='Kolkata',@roomtype='Deluxe',@beds='Single(1X)',@bookingfrom='03/11/2018',@bookingto='04/11/2018'
+
+SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN '03/04/2019' AND '04/04/2019') 
 
 --Procedure to check if Rooms are available by location
 
@@ -474,10 +478,9 @@ CREATE PROCEDURE HBMS.SearchRoomByLocationAndDates
 @bookingto DATETIME
 AS
 	BEGIN
-		SELECT * FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
+		SELECT * FROM HBMS.RoomDetails WHERE RoomID NOT IN (SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location))
     END
 GO
-
 
 CREATE PROCEDURE HBMS.RateHotels
 @userrating FLOAT,
@@ -492,7 +495,45 @@ AS
 	END
 GO
 
-													     EXEC HBMS.RateHotels @userrating=5,@bookingid=1000,@hotelid=1000
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+--ADMIN REPORTS
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--Procedure to display bookings of a specific hotel
+
+CREATE PROCEDURE HBMS.ViewAllHotelBookings
+@hotelid INT
+AS
+	BEGIN
+		SELECT * FROM HBMS.BookingDetails WHERE RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = @hotelid)
+	END
+GO
+
+
+--Procedure to display Guest list of a specific hotel
+
+CREATE PROCEDURE HBMS.ViewHotelGuestList
+@hotelid INT
+AS
+	BEGIN
+		SELECT UserID,GuestName,GuestNum FROM HBMS.BookingDetails WHERE RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID = @hotelid)
+	END
+GO
+
+--Procedure to display bookings for a specified date
+
+CREATE PROCEDURE HBMS.DisplayBookingsForDate
+@searchdate DATETIME
+AS
+	BEGIN
+		SELECT * FROM HBMS.BookingDetails WHERE BookingFrom<=@searchdate AND BookingTo>=@searchdate
+	END
+GO
+
+
+
+
+EXEC HBMS.RateHotels @userrating=5,@bookingid=1000,@hotelid=1000
 
 SELECT * FROM HBMS.Users
 
@@ -500,9 +541,9 @@ SELECT * FROM HBMS.Hotels
 
 INSERT INTO HBMS.Hotels VALUES ('Sonar Bangla','Kolkata','*****',null,'Yes','Yes',4000,0.2)
 
-SELECT * FROM HBMS.RoomDetails
+SELECT * FROM HBMS.RoomDetails ORDER BY hotelID,RoomNo
 
-INSERT INTO HBMS.RoomDetails VALUES ('101',1002,5000,'Single(1X)','Deluxe')
+INSERT INTO HBMS.RoomDetails VALUES ('101',1004,6000,'Single(1X)','Deluxe')
 
 SELECT * FROM HBMS.BookingDetails
 
