@@ -491,3 +491,19 @@ AS
 		UPDATE HBMS.Hotels SET Rating=@avg WHERE HotelID=@hotelid
 	END
 GO
+
+													     EXEC HBMS.RateHotels @userrating=5,@bookingid=1000,@hotelid=1000
+
+SELECT * FROM HBMS.Users
+
+SELECT * FROM HBMS.Hotels
+
+INSERT INTO HBMS.Hotels VALUES ('Sonar Bangla','Kolkata','*****',null,'Yes','Yes',4000,0.2)
+
+SELECT * FROM HBMS.RoomDetails
+
+INSERT INTO HBMS.RoomDetails VALUES ('101',1002,5000,'Single(1X)','Deluxe')
+
+SELECT * FROM HBMS.BookingDetails
+
+INSERT INTO HBMS.BookingDetails VALUES (1000,'Aritra',1003,'03/04/2019','04/04/2019',2,'Yes',5000,'Confirmed',null)
