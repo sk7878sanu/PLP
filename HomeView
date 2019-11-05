@@ -1,0 +1,54 @@
+@model HBMS_MVC.Models.UserAccount
+@{
+    ViewBag.Title = "Home";
+}
+<br />
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    <div class="navbar-header navbar-static-top">
+        <table>
+            <tr>
+                
+                <th>
+                    @Html.Editor("City",new { htmlAttributes = new {@class="form-control", @type="text", @placeholder="Search by City", @style="width:100%;height:50px;font-size:15px;border-color:green;", @required = "required" } })
+                    @*<input name="City" class="form-control" type="text" placeholder="Search by City" style="width:100%;height:50px;font-size:15px;border-color:green;" autocomplete="off" required="">*@
+                    
+                </th>
+                <th>
+                    <input type="date" name="checkIn" id="date_ex" placeholder="Check In Date" class="form-control" style="max-width:1000px;height:50px;font-size:15px;border-color:green;" required="" />
+                </th>
+                <th>
+                    <input type="date" name="checkOut" placeholder="To Date" class="form-control" style="max-width:1000px;height:50px;font-size:15px;border-color:green;" />
+                </th>
+                <th>
+                    @*<input type="number" name="noRooms" placeholder="Number of Rooms" class="form-control" style="max-width:800px;width:150px;height:50px;font-size:15px;border-color:green;" />*@
+                    <select class="form-control" style="max-width:800px;width:150px;height:50px;font-size:15px;border-color:green;" name="roomType" >
+                        <option value="">Room Type</option>
+                        <option value="1">Deluxe</option>
+                        <option value="2">Standard</option>
+                    </select>
+                </th>
+                <th>
+                    @*<input type="number" name="noRooms" placeholder="Number of Rooms" class="form-control" style="max-width:800px;width:150px;height:50px;font-size:15px;border-color:green;" />*@
+                    <select class="form-control" style="max-width:800px;width:150px;height:50px;font-size:15px;border-color:green;" name="bedType">
+                        <option value="">No of Beds</option>
+                        <option value="1">Single (1X)</option>
+                        <option value="2">Classic (2X)</option>
+                        <option value="3">Suite (3X)</option>
+                    </select>
+                </th>
+                <th>
+                    <input type="submit" value="Search" name="Search" class="form-control alert-danger" style="max-width:1000px;width:100px;height:50px;font-size:15px;border-color:red;" />
+                </th>
+            </tr>
+            <tr>
+                <td>@Html.ValidationMessage("City", "", new { @class = "text-danger" })</td>
+                <td>@Html.ValidationMessage("roomType", "", new { @class = "text-danger" })</td>
+                <td>@Html.ValidationMessage("bedType", "", new { @class = "text-danger" })</td>
+            </tr>
+        </table>
+    </div>
+}
