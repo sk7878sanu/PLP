@@ -1,0 +1,351 @@
+using HBMS_MVC.Models;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Net.Http;
+using System.Text.RegularExpressions;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.Routing;
+
+
+namespace HBMS_MVC.Controllers
+{
+    public class HBMSController : Controller
+    {
+        public static UserAccount LoggedInUser=null;
+
+        // GET: HBMS
+        public ActionResult Home()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult Home(string City, DateTime checkIn, DateTime checkOut, string roomType, string bedType)
+        {
+            //if (LoggedInUser != null)
+            //{
+            string searchby = null;
+            if (City == null || City == "")
+            {
+                ModelState.AddModelError("City", "Please Enter Valid City");
+            }
+            if ((roomType == null || roomType == "") && (bedType != "" && bedType != null))
+            {
+                searchby = "bedtype";
+            }
+            if ((bedType == null || bedType == "") && (roomType != "" && roomType != null))
+            {
+                searchby = "roomtype";
+            }
+            switch (roomType)
+            {
+                case "1":
+                    roomType = "Deluxe";
+                    break;
+                case "2":
+                    roomType = "Standard";
+                    break;
+            }
+            switch (bedType)
+            {
+                case "1":
+                    bedType = "Single(1X)";
+                    break;
+                case "2":
+                    bedType = "Classic(2X)";
+                    break;
+                case "3":
+                    bedType = "Suit(3X)";
+                    break;
+            }
+            if (ModelState.IsValid)
+            {
+                List<RoomDetails> result = null;
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://localhost:63458/api/");
+                    string query = null;
+                    if (searchby == null)
+                    {
+                        query = $"HBMS/GetRoomsByTypesAndBeds?location={City}&bookingfrom={checkIn}&bookingto={checkOut}&roomtype={roomType}&beds={bedType}";
+                    }
+                    if (searchby == "roomtype")
+                    {
+                        query = $"HBMS/GetRoomsByType?location={City}&roomtype={roomType}&bookingfrom={checkIn}&bookingto={checkOut}";
+                    }
+                    if (searchby == "bedtype")
+                    {
+                        query = $"HBMS/GetRoomsByBeds?location={City}&beds={bedType}&bookingfrom={checkIn}&bookingto={checkOut}";
+                    }
+                    var responseTask = client.GetAsync(query);
+                    responseTask.Wait();
+                    var res = responseTask.Result;
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var readTask = res.Content.ReadAsAsync<List<RoomDetails>>();
+                        readTask.Wait();
+                        result = readTask.Result;
+                    }
+                }
+                ModelForBooking modelForBooking = new ModelForBooking();
+                modelForBooking.roomDetails = result;
+                modelForBooking.userAccount = LoggedInUser;
+                return View("SearchRooms", modelForBooking);
+            }
+            //}
+            return View();
+        }
+
+        public ActionResult UserAccount()
+        {
+            return View(LoggedInUser);
+        }
+
+        public ActionResult RegisterUser()
+        {
+            UserAccount user = new UserAccount();
+            return View(user);
+        }
+
+        public ActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(string pwdold, string pwdnew, string pwdcheck)
+        {
+            if (pwdold == "")
+            {
+                ModelState.AddModelError("pwdold", "Please Enter Old Password");
+            }
+            if (pwdnew == "")
+            {
+                ModelState.AddModelError("pwdnew", "Please Enter New Password");
+            }
+            if (pwdcheck == "")
+            {
+                ModelState.AddModelError("pwdcheck", "Please Enter Password for Confirmation");
+            }
+            if (pwdold != "" && pwdnew != "" && pwdcheck != "")
+            {
+                if (pwdnew != pwdcheck)
+                {
+                    ModelState.AddModelError("pwdcheck", "Does Not Match With New Password");
+                    return View();
+                }
+                else
+                {
+                    using (var client = new HttpClient())
+                    {
+                        client.BaseAddress = new Uri("http://localhost:63458/api/");
+                        UserAccount user = LoggedInUser;
+                        user.Password = pwdold;
+                        var responseTask = client.PutAsJsonAsync<UserAccount>($"HBMS/Put?passwordnew={pwdnew}",user);
+                        responseTask.Wait();
+                        var res = responseTask.Result;
+                        if (res.IsSuccessStatusCode)
+                        {
+                            var readTask = res.Content.ReadAsAsync<bool>();
+                            readTask.Wait();
+                            if (readTask.Result)
+                            {
+                                TempData["SuccessMessage"] = "Password Has Been Changed Successfully";
+                                return RedirectToAction("UserAccount");
+                            }
+                            else
+                            {
+                                ModelState.AddModelError("isvalid", "Invalid Password");
+                            }
+                        }
+                    }
+                }
+
+            }
+            return View();
+        }
+
+        public ActionResult ChangeDetails()
+        {
+            return View(LoggedInUser);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangeDetails(string username,string email, string phoneno, string name)
+        {
+            UserAccount user = LoggedInUser;
+            user.Email = email;
+            user.PhoneNo = phoneno;
+            user.Name = name;
+            if (name == "")
+            {
+                ModelState.AddModelError("name", "Please Enter Your Name");
+            }
+            if (!Regex.IsMatch(name, "^[\\p{L} .'-]+$"))
+            {
+                ModelState.AddModelError("name", "Invalid Name");
+            }
+            if (ModelState.IsValid)
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://localhost:63458/api/");
+                    var responseTask = client.PutAsJsonAsync("HBMS", user);
+                    responseTask.Wait();
+                    var res = responseTask.Result;
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var readTask = res.Content.ReadAsAsync<bool>();
+                        readTask.Wait();
+                        if (readTask.Result)
+                        {
+                            return RedirectToAction("UserAccount");
+                        }
+                    }
+                }
+            }
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RegisterUser([Bind(Include = "UserId,UserName,Email,PhoneNo,Name,Password,UserType")]UserAccount user,string Confirm_Password,string Passcode)
+        {
+            if (ModelState.IsValid)
+            {
+                int result = 0;
+                if(user.UserType=="Employee" && Passcode!="secretpasscode@capgemini.com")
+                {
+                    ModelState.AddModelError("Passcode", "Invalid Passcode");
+                    ViewBag.Passcode = "Employee";
+                    return View(user);
+                }
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://localhost:63458/api/");
+                    var responseTask = client.GetAsync($"HBMS/Get?username={user.UserName}&email={user.Email}&phoneno={user.PhoneNo}");
+                    responseTask.Wait();
+
+                    var res = responseTask.Result;
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var readTask = res.Content.ReadAsAsync<Int32>();
+                        readTask.Wait();
+                        result = readTask.Result;
+                    }
+                }
+
+                if (user.Password != Confirm_Password)
+                {
+                    ModelState.AddModelError("Confirm_Password", "Does Not Match With Password");
+                }
+                else if (result == 0)
+                {
+
+                    using (var client = new HttpClient())
+                    {
+                        client.BaseAddress = new Uri("http://localhost:63458/api/");
+                        var postTask = client.PostAsJsonAsync<UserAccount>("HBMS", user);
+                        postTask.Wait();
+
+                        var res = postTask.Result;
+                        if (res.IsSuccessStatusCode)
+                        {
+                            var readTask = res.Content.ReadAsAsync<bool>();
+                            readTask.Wait();
+                            if (readTask.Result)
+                            {
+                                TempData["SuccessMessage"] = "Registered Successfully";
+                                return RedirectToAction("Login", "HBMS");
+                            }
+                        }
+                    }
+                }
+                if (result % 10 == 1)
+                {
+                    ModelState.AddModelError("UserName", "Entered UserName Not Available");
+                }
+                if ((result/10)%10==1)
+                {
+                    ModelState.AddModelError("Email", $"An account already exists with {user.Email}");
+                }
+                if (result / 100 == 1)
+                {
+                    ModelState.AddModelError("PhoneNo", $"An account already exists with {user.PhoneNo}");
+                }
+                
+            }
+            return View(user);
+        }
+
+        public ActionResult Login()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Login(string loginid,string password)
+        {
+            UserAccount result = null;
+            if (loginid == "")
+            {
+                ModelState.AddModelError("loginid", $"Please Enter UserName/Email ID");
+            }
+            if (password == "")
+            {
+                ModelState.AddModelError("password", $"Please Enter Password");
+            }
+            if (loginid!="" && password!="")
+            {
+                
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri("http://localhost:63458/api/");
+                    var responseTask = client.GetAsync($"HBMS/Get?loginid={loginid}&password={password}");
+                    responseTask.Wait();
+                    var res = responseTask.Result;
+                    if (res.IsSuccessStatusCode)
+                    {
+                        var readTask = res.Content.ReadAsAsync<UserAccount>();
+                        readTask.Wait();
+                        result = readTask.Result;
+                        if (result != null)
+                        {
+                            LoggedInUser = (UserAccount)result;
+                            if (LoggedInUser != null)
+                            {
+                                TempData["SuccessMessage"] = "Logged In Successfully";
+                            }
+                            return RedirectToAction("Home");
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("isvalid","Invalid Login ID/Password");
+                        }
+                    }
+                }
+            }
+            ViewBag.UserName = loginid;
+            ViewBag.Password = "";
+            return View();
+        }
+
+        public ActionResult LoggedOut()
+        {
+            LoggedInUser = null;
+            return View();
+        }
+
+        public ActionResult Contact()
+        {
+            return View();
+        }
+    }
+}
