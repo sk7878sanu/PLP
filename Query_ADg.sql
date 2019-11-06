@@ -547,3 +547,59 @@ INSERT INTO HBMS.RoomDetails VALUES ('101',1004,6000,'Single(1X)','Deluxe')
 SELECT * FROM HBMS.BookingDetails
 
 INSERT INTO HBMS.BookingDetails VALUES (1000,'Aritra',1003,'03/04/2019','04/04/2019',2,'Yes',5000,'Confirmed',null)
+---------------------------------------------------nEW sEARCH meTHODS-------------------------------------------------------------													     
+--Procedure for Searching a Room by RoomType
+
+CREATE PROCEDURE HBMS.SearchHotelByType
+@location VARCHAR(30),
+@roomtype VARCHAR(10),
+@bookingfrom DATETIME,
+@bookingto DATETIME
+AS
+	BEGIN
+		SELECT a.RoomID,a.RoomNo,a.HotelID,a.Price,a.Beds,a.RoomType,b.HotelName FROM HBMS.RoomDetails a,HBMS.Hotels b WHERE RoomType=@roomtype AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location)) AND a.HotelID=b.HotelID GROUP BY a.HotelID
+	END
+GO
+
+--Procedure for Searching a Room by Beds
+
+CREATE PROCEDURE HBMS.SearchHotelByBeds
+@location VARCHAR(30),
+@beds VARCHAR(12),
+@bookingfrom DATETIME,
+@bookingto DATETIME
+AS
+	BEGIN
+		SELECT a.RoomID,a.RoomNo,a.HotelID,a.Price,a.Beds,a.RoomType,b.HotelName FROM HBMS.RoomDetails a,HBMS.Hotels b WHERE Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location)) AND a.HotelID=b.HotelID GROUP BY a.HotelID
+	END
+GO
+
+--Procedure for Searching a Room by RoomType and Beds
+
+CREATE PROCEDURE HBMS.SearchHotelByTypeAndBeds
+@location VARCHAR(30),
+@roomtype VARCHAR(10),
+@beds VARCHAR(12),
+@bookingfrom DATETIME,
+@bookingto DATETIME
+AS
+	BEGIN
+		SELECT a.RoomID,a.RoomNo,a.HotelID,a.Price,a.Beds,a.RoomType,b.HotelName FROM HBMS.RoomDetails a,HBMS.Hotels b WHERE RoomType=@roomtype AND Beds=@beds AND RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed')  AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location)) AND a.HotelID=b.HotelID GROUP BY a.HotelID
+	END
+GO
+
+exec HBMS.SearchRoomByTypeAndBeds @location='Kolkata',@roomtype='Deluxe',@beds='Single(1X)',@bookingfrom='03/11/2018',@bookingto='04/11/2018'
+
+SELECT RoomID FROM BookingDetails WHERE (BookingFrom BETWEEN '03/04/2019' AND '04/04/2019') 
+
+--Procedure to check if Rooms are available by location
+
+CREATE PROCEDURE HBMS.SearchHotelByLocationAndDates
+@location VARCHAR(30),
+@bookingfrom DATETIME,
+@bookingto DATETIME
+AS
+	BEGIN
+		SELECT a.RoomID,a.RoomNo,a.HotelID,a.Price,a.Beds,a.RoomType,b.HotelName FROM HBMS.RoomDetails a,HBMS.Hotels b WHERE RoomID NOT IN (SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto)  AND BookingStatus='Confirmed') AND RoomID IN (SELECT RoomID FROM HBMS.RoomDetails WHERE HotelID IN (SELECT HotelID FROM HBMS.Hotels WHERE Location=@location)) AND a.HotelID=b.HotelID GROUP BY a.HotelID
+    	END
+GO													  
