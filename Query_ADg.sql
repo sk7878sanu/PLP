@@ -334,13 +334,12 @@ CREATE PROCEDURE HBMS.BookRooms
 @beds VARCHAR(12),
 @guestnum INT,
 @breakfastincluded VARCHAR (5),
-@totalamount FLOAT,
-@rating FLOAT
+@totalamount FLOAT
 AS
 	BEGIN
 		DECLARE @roomid INT
 		SET @roomid=(SELECT TOP 1 RoomID FROM HBMS.RoomDetails WHERE RoomID NOT IN(SELECT RoomID FROM HBMS.BookingDetails WHERE (BookingFrom BETWEEN @bookingfrom AND @bookingto) OR (BookingTo BETWEEN @bookingfrom AND @bookingto) AND BookingStatus='Confirmed') AND RoomType=@roomtype AND Beds=@beds AND HotelID=@hotelid)
-        INSERT INTO HBMS.BookingDetails VALUES (@userid,@guestname,@roomid,@bookingfrom,@bookingto,@guestnum,@breakfastincluded,@totalamount,'Confirmed',@rating)
+        INSERT INTO HBMS.BookingDetails VALUES (@userid,@guestname,@roomid,@bookingfrom,@bookingto,@guestnum,@breakfastincluded,@totalamount,'Confirmed',@rating,null)
     END
 GO
 
