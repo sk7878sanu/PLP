@@ -1,0 +1,105 @@
+use Training_13Aug19_Pune
+go
+
+drop TABLE HBMS.BookingDetails
+go
+drop table HBMS.RoomDetails
+go
+Select * From HBMS.Hotels
+go
+INSERT INTO HBMS.Hotels VALUES
+ ('Sonar Bangla Grand','Kolkata','*****',null,'Yes','Yes',7000,0.2),
+ ('Hyatt Regency','Kolkata','*****',null,'Yes','Yes',7500,0.2),
+ ('Mirage Hotel','Mumbai','****',null,'Yes','Yes',5000,0.15),
+ ('Executive Enclave','Mumbai','***',null,'Yes','Yes',1800,0.2),
+ ('JW Marriott','Mumbai','*****',null,'Yes','Yes',5000,0.15),
+ ('The Gateway Hotel','Delhi','*****',null,'Yes','Yes',4800,0.10),
+ ('Hotel Lemon Tree','Pune','****',null,'Yes','Yes',2700,0.10),
+ ('Hotel Radisson','Jaipur','*****',null,'Yes','Yes',7500,0.15),
+('Lalit Beach Resort','Goa','****',null,'Yes','Yes',5000,0.10),
+ ('ITC Grand','Kolkata','*****',null,'Yes','Yes',7500,0.2),
+ ('Royal Malewane','Mumbai','****',null,'Yes','Yes',5000,0.1),
+ ('Golden Tree','Pune','****',null,'Yes','Yes',5000,0.15),
+ ('Sunvalley Enclave','Delhi','****',null,'Yes','Yes',2800,0.2), 
+ ('Country Inn & Suites by Radisson','Goa','****',null,'Yes','Yes',8500,0.10),
+('Caravela Beach Resort','Goa','*****',null,'Yes','Yes',7000,0.10)
+
+go
+CREATE TABLE HBMS.RoomDetails
+(
+RoomID INT IDENTITY(1013,1) PRIMARY KEY,
+RoomNo INT NOT NULL,
+HotelID INT NOT NULL FOREIGN KEY (HotelID) REFERENCES HBMS.Hotels(HotelID) ON DELETE CASCADE,
+Price FLOAT NOT NULL,
+Beds VARCHAR(12) NOT NULL CHECK(Beds IN ('Single(1X)','Classic(2X)','Suite(3X)')),
+RoomType VARCHAR(10) NOT NULL CHECK (RoomType IN ('Deluxe','Standard'))
+--BookingID INT NOT NULL FOREIGN KEY (BookingID) REFERENCES HBMS.BookingDetails(BookingID)
+)
+
+CREATE TABLE HBMS.BookingDetails
+(
+BookingID INT IDENTITY(1013,1) PRIMARY KEY,
+UserID INT NOT NULL FOREIGN KEY (UserID) REFERENCES HBMS.Users(UserID) ON DELETE CASCADE,
+GuestName VARCHAR(40) NOT NULL,
+RoomID INT NOT NULL FOREIGN KEY (RoomID) REFERENCES HBMS.RoomDetails(RoomID) ON DELETE CASCADE,
+BookingFrom DATETIME NOT NULL,
+BookingTo DATETIME NOT NULL,
+GuestNum INT NOT NULL CHECK (GuestNum IN (1,2,3)),
+BreakfastIncluded VARCHAR (5) NOT NULL CHECK (BreakfastIncluded IN ('Yes','No')),
+TotalAmount FLOAT NOT NULL,
+BookingStatus VARCHAR(10) NOT NULL CHECK(BookingStatus IN ('Confirmed','Cancelled')),
+Rating FLOAT CHECK (Rating >= 1 AND Rating <= 5)
+)
+
+
+ INSERT INTO HBMS.RoomDetails VALUES 
+ ('101',1013,2700,'Single(1X)','Standard'),
+ ('102',1013,3200,'Single(1X)','Deluxe'),
+  ('103',1013,5000,'Classic(2X)','Standard'),
+   ('104',1013,4500,'Classic(2X)','Deluxe'),
+  ('105',1013,5000,'Suite(3X)','Deluxe'),
+
+  ('201',1013,2700,'Single(1X)','Standard'),
+ ('202',1013,3200,'Single(1X)','Deluxe'),
+  ('203',1013,5000,'Classic(2X)','Standard'),
+   ('204',1013,4500,'Classic(2X)','Deluxe'),
+  ('205',1013,5000,'Suite(3X)','Deluxe'),
+
+('301',1013,2700,'Single(1X)','Standard'),
+ ('302',1013,3200,'Single(1X)','Deluxe'),
+  ('303',1013,5000,'Classic(2X)','Standard'),
+   ('304',1013,4500,'Classic(2X)','Deluxe'),
+  ('305',1013,5000,'Suite(3X)','Deluxe')
+
+
+
+  
+ INSERT INTO HBMS.RoomDetails VALUES 
+  ('101',1013,3500,'Single(1X)','Standard'),
+ ('102',1013,5500,'Single(1X)','Deluxe'),
+  ('103',1013,6000,'Classic(2X)','Standard'),
+   ('104',1013,6500,'Classic(2X)','Deluxe'),
+  ('105',1013,7500,'Suite(3X)','Deluxe'),
+
+  ('201',1013,3500,'Single(1X)','Standard'),
+ ('202',1013,5500,'Single(1X)','Deluxe'),
+  ('203',1013,6000,'Classic(2X)','Standard'),
+   ('204',1013,6500,'Classic(2X)','Deluxe'),
+  ('205',1013,7500,'Suite(3X)','Deluxe'),
+
+ ('301',1013,3500,'Single(1X)','Standard'),
+ ('302',1013,5500,'Single(1X)','Deluxe'),
+  ('303',1013,6000,'Classic(2X)','Standard'),
+   ('304',1013,6500,'Classic(2X)','Deluxe'),
+  ('305',1013,7500,'Suite(3X)','Deluxe'),
+
+ ('401',1013,3500,'Single(1X)','Standard'),
+ ('402',1013,5500,'Single(1X)','Deluxe'),
+  ('403',1013,6000,'Classic(2X)','Standard'),
+   ('404',1013,6500,'Classic(2X)','Deluxe'),
+  ('405',1013,7500,'Suite(3X)','Deluxe')
+
+
+  
+  
+  select * from [HBMS].[RoomDetails]
